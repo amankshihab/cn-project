@@ -68,7 +68,7 @@ func handleConnection(c net.Conn) {
 			} else {
 				c.Write([]byte(" "))
 			}
-		
+
 		// deletes a file
 		case "de":
 			err := os.Remove(strings.Trim(bufferLower[7:], " \n"))
@@ -76,6 +76,26 @@ func handleConnection(c net.Conn) {
 				c.Write([]byte("Error deleting the files"))
 			}
 			c.Write([]byte("File Deleted"))
+
+		case "ed":
+			file, err := os.OpenFile(strings.Trim(bufferLower[5:], " \n"), os.O_RDWR, 0666)
+			if err != nil {
+				c.Write([]byte("Error Accessing File."))
+			}
+			
+			content, err := bufio.NewReader(c).ReadBytes('\n')
+			if err != nil {
+				c.Write([]byte("Error retreiving data"))
+			}
+			
+			_, err = file.WriteString(strings.Trim(string(content), " #"))
+			if err != nil {
+				c.Write([]byte("Error writing into file."))
+			}
+
+			c.Write([]byte("\nFile edited."))
+
+			file.Close()
 
 		default:
 			c.Write([]byte("Command not recognized"))
