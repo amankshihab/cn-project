@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -19,22 +20,50 @@ func main() {
 	}
 
 	reader := bufio.NewReader(os.Stdin)
+	reader2 := bufio.NewReader(os.Stdin)
 
 	for {
 
-		fmt.Print(">>")
+		fmt.Print("\n>>")
 
 		input, _ := reader.ReadString('\n')
 
 		// To exit from the prompt
 		if input == "exit\n" {
+
+			conn.Close()
 			break
 		}
 
 		conn.Write([]byte(input))
 
-		message, _ := bufio.NewReader(conn).ReadString('\n')
+		if input[:4] == "edit" {
 
-		log.Println("Server says: " + message)
+			reply := make([]byte, 1024)
+			_, _ = conn.Read(reply)
+
+			if strings.Compare(string(reply), "err") == 0 {
+				fmt.Println("Not happening")
+			} else {
+
+				content, err := reader2.ReadString('#')
+				if err != nil {
+					fmt.Println("Reader not wokring")
+				}
+				fmt.Println(content)
+				fmt.Println([]byte(content))
+				conn.Write([]byte(content))
+
+				// reader2.Reset(reader2)
+			}
+		}
+
+		reply := make([]byte, 1024)
+		_, err := conn.Read(reply)
+		if err != nil {
+			fmt.Println("Not happening")
+		}
+		fmt.Println()
+		log.Println(string(reply))
 	}
 }

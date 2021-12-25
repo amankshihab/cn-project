@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -78,17 +79,20 @@ func handleConnection(c net.Conn) {
 			c.Write([]byte("File Deleted"))
 
 		case "ed":
-			file, err := os.OpenFile(strings.Trim(bufferLower[5:], " \n"), os.O_RDWR, 0666)
+			file, err := os.OpenFile(strings.Trim(bufferLower[5:], " \n"), os.O_RDWR | os.O_APPEND, 0666)
 			if err != nil {
 				c.Write([]byte("Error Accessing File."))
 			}
 			
-			content, err := bufio.NewReader(c).ReadBytes('\n')
+			c.Write([]byte("nil"))
+
+			content, err := bufio.NewReader(c).ReadBytes('#')
 			if err != nil {
 				c.Write([]byte("Error retreiving data"))
 			}
 			
-			_, err = file.WriteString(strings.Trim(string(content), " #"))
+			fmt.Println(string(content))
+			_, err = file.Write(bytes.Trim(content, "#"))
 			if err != nil {
 				c.Write([]byte("Error writing into file."))
 			}
