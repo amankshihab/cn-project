@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -61,6 +60,6 @@ func main() {
 			fmt.Println("Not happening")
 		}
 		fmt.Println()
-		log.Println(string(reply))
+		fmt.Println(string(reply))
 	}
 }
