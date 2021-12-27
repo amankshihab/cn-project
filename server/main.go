@@ -20,6 +20,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer l.Close()
+
 	fmt.Println("Listening on port 8080..")
 
 	for {
@@ -51,19 +52,32 @@ func handleConnection(c net.Conn) {
 
 		// Creates a new file
 		case "cr":
-			file, err := os.Create(strings.Trim(bufferLower[7:], " \n"))
-			if err != nil {
-				c.Write([]byte("Error while creating file, try again later."))
+			if _, err := os.Stat(strings.Trim(bufferLower[7:], " \n\r")); os.IsNotExist(err) {
+
+				file, err := os.Create(strings.Trim(bufferLower[7:], " \n\r"))
+				if err != nil {
+					c.Write([]byte("Error while creating file, try again later."))
+					break
+				}
+
+				file.Close()
+
+				c.Write([]byte("File created"))
+			} else {
+				c.Write([]byte("File with the same name already exists."))
 			}
-			file.Close()
-			c.Write([]byte("File created"))
 
 		// same effect as executing cat command on a file
 		case "ca":
-			content, err := os.ReadFile(strings.Trim(bufferLower[4:], " \n"))
-			if err != nil {
-				c.Write([]byte("Won't work mate"))
+			content, err := os.ReadFile(strings.Trim(bufferLower[4:], " \n\r"))
+			if os.IsNotExist(err) {
+				c.Write([]byte("File doesn't exist."))
+				break
+			} else if err != nil {
+				c.Write([]byte("Error while reading file."))
+				break
 			}
+
 			if len(content) != 0 {
 				c.Write(content)
 			} else {
@@ -72,26 +86,33 @@ func handleConnection(c net.Conn) {
 
 		// deletes a file
 		case "de":
-			err := os.Remove(strings.Trim(bufferLower[7:], " \n"))
-			if err != nil {
+			err := os.Remove(strings.Trim(bufferLower[7:], " \n\r"))
+			if os.IsNotExist(err) {
 				c.Write([]byte("Error deleting the files"))
+				break
+			} else if err != nil {
+				c.Write([]byte("Error deleting files"))
+				break
 			}
 			c.Write([]byte("File Deleted"))
 
 		case "ed":
-			file, err := os.OpenFile(strings.Trim(bufferLower[5:], " \n"), os.O_RDWR | os.O_APPEND, 0666)
-			if err != nil {
-				c.Write([]byte("Error Accessing File."))
+			file, err := os.OpenFile(strings.Trim(bufferLower[5:], " \n\r"), os.O_RDWR|os.O_APPEND, 0666)
+			if os.IsNotExist(err) {
+				c.Write([]byte("File doesn't exist."))
+				break
+			} else if err != nil {
+				c.Write([]byte("Error accessing file."))
+				break
 			}
-			
+
 			c.Write([]byte("nil"))
 
 			content, err := bufio.NewReader(c).ReadBytes('#')
 			if err != nil {
 				c.Write([]byte("Error retreiving data"))
 			}
-			
-			fmt.Println(string(content))
+
 			_, err = file.Write(bytes.Trim(content, "#"))
 			if err != nil {
 				c.Write([]byte("Error writing into file."))

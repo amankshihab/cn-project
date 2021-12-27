@@ -29,7 +29,7 @@ func main() {
 		input, _ := reader.ReadString('\n')
 
 		// To exit from the prompt
-		if input == "exit\n" {
+		if strings.Trim(input, " \n\r") == "exit" {
 
 			conn.Close()
 			break
@@ -50,11 +50,8 @@ func main() {
 				if err != nil {
 					fmt.Println("Reader not wokring")
 				}
-				fmt.Println(content)
-				fmt.Println([]byte(content))
-				conn.Write([]byte(content))
 
-				// reader2.Reset(reader2)
+				conn.Write([]byte(content))
 			}
 		}
 
